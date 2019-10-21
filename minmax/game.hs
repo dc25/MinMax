@@ -13,9 +13,9 @@ module Samples.MinMax.Game
 ------------------------------------------------------------------------------
 --  imports
 --
---  I use Core instead of Prelude. Core matches the Mana standard libarry
+--  I use Core instead of Prelude. Core matches the Mana standard library
 --  I have tried to make the abstractions in Core cleaner (subjectively of course)
---  and safer (no partial function/etc.) than Prelude
+--  and safer than Prelude (no partial function/etc.)
 --
 --  unfortunately Core is unreleased so you won't be able to build this file
 --
