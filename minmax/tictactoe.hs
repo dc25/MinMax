@@ -50,7 +50,7 @@ instance Negate Value where
   negate Win  = Lose
 
 ------------------------------------------------------------------------------
---  !!!! TTTT could be parameterized over size with dependent types
+--  !!!! TTT could be parameterized over size with dependent types
 --       but instead just use the global constant 'size'
 ------------------------------------------------------------------------------
 
