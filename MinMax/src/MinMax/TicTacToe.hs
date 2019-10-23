@@ -4,7 +4,13 @@
 --
 ------------------------------------------------------------------------------
 
-module Samples.MinMax.TicTacToe
+{-# LANGUAGE TypeApplications #-}     
+{-# LANGUAGE ScopedTypeVariables #-}     
+{-# LANGUAGE MultiParamTypeClasses #-}     
+{-# LANGUAGE DeriveGeneric #-}     
+{-# LANGUAGE InstanceSigs  #-}     
+
+module MinMax.TicTacToe
   ( test
   ) where
 
@@ -14,9 +20,14 @@ module Samples.MinMax.TicTacToe
 --  Core instead of Prelude (see Game.hs)
 ------------------------------------------------------------------------------
 
-import Core
+-- import Core
 import Data.Bits
-import Samples.MinMax.Game
+import Data.List
+import Data.List.Split
+import Data.Maybe
+import GHC.Generics
+import MinMax.Data as MMDa
+import MinMax.Game
 
 ------------------------------------------------------------------------------
 --  TTT - Tac-Tac-Toe Board state
@@ -26,13 +37,13 @@ import Samples.MinMax.Game
 --  obits  - positions where O has been played
 ------------------------------------------------------------------------------
 
-data TTT = TTT { player :: Player, xbits :: Int, obits :: Int } deriving (Eq)
+data TTT = TTT { player :: Player, xbits :: Int, obits :: Int } deriving (Eq, Ord)
 
 ------------------------------------------------------------------------------
 --
 ------------------------------------------------------------------------------
 
-data Player = X | O deriving (Eq)
+data Player = X | O deriving (Eq, Ord, Show)
 
 instance Negate Player where
   negate X = O
@@ -42,7 +53,7 @@ instance Negate Player where
 --
 ------------------------------------------------------------------------------
 
-data Value = Lose | Draw | Win deriving (Generic, Eq, Ord, IDoc)
+data Value = Lose | Draw | Win deriving (Generic, Eq, Ord, Show)
 
 instance Negate Value where
   negate Lose = Win
@@ -64,8 +75,12 @@ totalStates   :: Int = fromIndex (maxBound @TTT)
 --   where
 --     range min max = [min .. (max - 1)]
 
-positions :: List Int
-positions = range 0 positionCount
+ra :: Int -> Int -> [Int]
+ra b e | (b == e) = []
+       | otherwise = b : (ra (b+1) e)
+
+positions :: [Int]
+positions = ra 0 positionCount
 
 ------------------------------------------------------------------------------
 --  each state TTT has a unique Int index
@@ -92,17 +107,17 @@ instance IIndex TTT where
 instance Game TTT Value where
   moves (TTT b xs os) | isWinning size xs = Left Win
                       | isWinning size os = Left Lose
-                      | True              = result <| mapMaybe move positions
+                      | True              = result $ mapMaybe move positions
     where
       -- the xo and os are swapped after making a move
       -- for the AI the current player is always X
 
-      move position = if testBit (xs .|. os) position then None else Some <| TTT (negate b) (os .|. bit position) xs
+      move position = if testBit (xs .|. os) position then Nothing else Just $ TTT (MMDa.negate b) (os .|. bit position) xs
 
       -- if there are no moves return Draw
 
-      result (Nil      ) = Left Draw
-      result (Cons x xs) = Right <| NonEmptyList x xs
+      result ([]       ) = Left Draw
+      result (x:xs) = Right $ x:xs
 
 ------------------------------------------------------------------------------
 --  isWinning - is a state winning?
@@ -150,20 +165,23 @@ b8  = (2 :: Int) ^ (8 :: Int)
 --  turn TTT into a printable document
 ------------------------------------------------------------------------------
 
-instance IDoc TTT where
-  doc (TTT O xs os) = tttDoc xs os
-  doc (TTT X xs os) = tttDoc os xs
+instance Show TTT where
+  show (TTT O xs os) = tttDoc xs os
+  show (TTT X xs os) = tttDoc os xs
 
-tttDoc xs os = columnDoc <| intersperse divider <| map lineDoc <| chunk size <| fmap xoDoc positions
+
+tttDoc xs os = concat $ 
+                 fmap (++"\n") $ 
+                 intersperse divider $ 
+                 fmap (concat . (intersperse "|")) $ 
+                 chunksOf size $ 
+                 fmap xoDoc [0..positionCount-1]
   where
-    xoDoc position | testBit xs position = doc " X "
-                   | testBit os position = doc " O "
-                   | True                = doc "   "
+    xoDoc position | testBit xs position = " X "
+                   | testBit os position = " O "
+                   | True                = "   "
 
-    lineDoc :: List Doc -> Doc
-    lineDoc = sepWithDoc (doc "|") << map doc
-
-    divider = sepWithDoc (doc "+") <| replicate size <| doc "---"
+    divider = concat $ intersperse "+" $ replicate size $ "---"
 
 ------------------------------------------------------------------------------
 --
@@ -171,9 +189,10 @@ tttDoc xs os = columnDoc <| intersperse divider <| map lineDoc <| chunk size <| 
 
 test :: IO ()
 test = do
-  [printf|playerBits  = $playerBits|]
-  [printf|playerMask  = $playerMask|]
-  [printf|totalStates = $totalStates|]
+  print ("playerBits  = " ++ show playerBits)
+  print ("playerMask  = " ++ show playerMask)
+  print ("totalStates  = " ++ show totalStates)
   print ""
 
   play (zero @TTT)
+

@@ -1,0 +1,6 @@
+.stack-work/
+*/app/Main
+*.o
+*.hi
+*.cabal
+*~

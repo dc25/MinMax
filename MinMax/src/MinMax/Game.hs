@@ -6,7 +6,12 @@
 --
 ------------------------------------------------------------------------------
 
-module Samples.MinMax.Game
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+
+module MinMax.Game
   ( Game(..), Moves, play
   ) where
 
@@ -42,7 +47,12 @@ module Samples.MinMax.Game
 --
 ------------------------------------------------------------------------------
 
-import Core
+import Prelude(IO, Show, Either(Left,Right), Ord, ($), (.), print, return, id, Bounded(maxBound))
+import Data.Maybe
+import Data.List
+import Data.Vector (Vector, generate)
+import qualified Data.Vector as Vector
+import MinMax.Data as MMDa
 
 ------------------------------------------------------------------------------
 --  Game
@@ -65,7 +75,7 @@ class (Ord v, Negate v, IIndex s) => Game s v | s -> v where
 --  Right s -- there are    legal moves
 ------------------------------------------------------------------------------
 
-type Moves s v = Either v (NonEmptyList s)
+type Moves s v = Either v ([s])
 
 ------------------------------------------------------------------------------
 --  play - The AI plays through a game given some initial state
@@ -75,24 +85,18 @@ type Moves s v = Either v (NonEmptyList s)
 --           this wouldn't be too hard to fix
 ------------------------------------------------------------------------------
 
-play :: forall s v . (IDoc s, Game s v) => s -> IO ()
+play :: forall s v . (IIndex s, Show s, Game s v) => s -> IO ()
 play = go
   where
     go s = do
       print s
       print ""
-      bestMove s |> \case
-        None   -> return ()
-        Some s -> go s
-
-    bestMove :: s -> Maybe s
-    bestMove s =
-      case moves s of
-        Left  v  -> None
-        Right ss -> Some <| maximumOn score ss
+      case (moves s) of
+        Left v   -> return ()
+        Right ss -> go $ maximumOn score ss
 
     score :: s -> v
-    score s = getElement s scores
+    score s = scores Vector.! (MMDa.fromIndex s)
 
     -- scores - a lazy array mapping from states to the best result that can forced from that state
     -- this needs to be local to play, but ouside of go/bestMove/score in order to get caching
@@ -101,15 +105,16 @@ play = go
     --   -- initialize an array by lazily evaluating a function at every index
     --   array :: (i -> a) -> Array i a
 
-    scores :: Array s v
-    scores =
-      array \s ->
-        case moves s of
+    --- scores :: forall s v . (IIndex s) => Vector v
+    scores :: Vector v
+    scores = generate (MMDa.fromIndex (maxBound :: s))
+      (\s ->
+        case moves (MMDa.toIndex s) of
           Left  v  -> v
 
           -- this one line is the minmax algorithm
 
-          Right ss -> negate <| minimumOn id <| map score ss
+          Right ss -> negate $ minimumOn id $ (map score ss))
 
 ------------------------------------------------------------------------------
 --  this algorithm is tractable for a 4x4 board
