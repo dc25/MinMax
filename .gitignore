@@ -1,6 +1,10 @@
 .stack-work/
 */app/Main
+*.jsexe/
+*.swp
 *.o
 *.hi
+*.js_o
+*.js_hi
 *.cabal
 *~
