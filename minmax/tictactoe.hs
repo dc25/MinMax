@@ -3,6 +3,7 @@
 --  MinMax.TicTacToe
 --
 ------------------------------------------------------------------------------
+{-# LANGUAGE BinaryLiterals #-}
 
 module Samples.MinMax.TicTacToe
   ( test
@@ -16,6 +17,7 @@ module Samples.MinMax.TicTacToe
 
 import Core
 import Data.Bits
+import Data.Function
 import Samples.MinMax.Game
 
 ------------------------------------------------------------------------------
@@ -113,38 +115,26 @@ instance Game TTT Value where
 
 isWinning size = if size == 2 then isWinning2 else isWinning3
 
+testBits :: Int -> Int -> Bool
+testBits bits mask = ((bits .&. mask) == mask)
+
 isWinning2 :: Int -> Bool
-isWinning2 n | n == f2 b0 b1 = True  -- 11 00
-             | n == f2 b2 b3 = True  -- 00 11
-             | n == f2 b0 b2 = True  -- 10 10
-             | n == f2 b1 b3 = True  -- 01 01
-             | n == f2 b0 b3 = True  -- 10 01
-             | n == f2 b1 b2 = True  -- 01 10
-             | True          = False
+isWinning2 n =    testBits n 0b0011 
+               || testBits n 0b1100
+               || testBits n 0b0101
+               || testBits n 0b1010
+               || testBits n 0b0110
+               || testBits n 0b1001
 
 isWinning3 :: Int -> Bool
-isWinning3 n | n == f3 b0 b1 b2 = True -- 111 000 000
-             | n == f3 b3 b4 b5 = True -- 000 111 000
-             | n == f3 b6 b7 b8 = True -- 000 000 111
-             | n == f3 b1 b3 b6 = True -- 100 100 100
-             | n == f3 b2 b4 b7 = True -- 010 010 010
-             | n == f3 b3 b5 b8 = True -- 001 001 001
-             | n == f3 b0 b4 b8 = True -- 100 010 001
-             | n == f3 b2 b4 b6 = True -- 001 010 100
-             | True             = False
-
-f2 b0 b1    = b0 .|. b1
-f3 b0 b1 b2 = b0 .|. b1 .|. b2
-
-b0  = (2 :: Int) ^ (0 :: Int)
-b1  = (2 :: Int) ^ (1 :: Int)
-b2  = (2 :: Int) ^ (2 :: Int)
-b3  = (2 :: Int) ^ (3 :: Int)
-b4  = (2 :: Int) ^ (4 :: Int)
-b5  = (2 :: Int) ^ (5 :: Int)
-b6  = (2 :: Int) ^ (6 :: Int)
-b7  = (2 :: Int) ^ (7 :: Int)
-b8  = (2 :: Int) ^ (8 :: Int)
+isWinning3 n =    testBits n 0b000000111 
+               || testBits n 0b000111000 
+               || testBits n 0b111000000 
+               || testBits n 0b001001001 
+               || testBits n 0b010010010 
+               || testBits n 0b100100100 
+               || testBits n 0b100010001
+               || testBits n 0b001010100 
 
 ------------------------------------------------------------------------------
 --  turn TTT into a printable document
