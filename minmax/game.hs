@@ -57,6 +57,7 @@ import Core
 
 class (Ord v, Negate v, IIndex s) => Game s v | s -> v where
   moves :: s -> Moves s v
+  maximizersTurn :: s -> Bool
 
 ------------------------------------------------------------------------------
 --  Moves
@@ -89,7 +90,12 @@ play = go
     bestMove s =
       case moves s of
         Left  v  -> None
-        Right ss -> Some <| maximumOn score ss
+        Right ss -> 
+          let maxMinOn = 
+                if maximizersTurn s 
+                then maximumOn
+                else minimumOn
+          in Some <| maxMinOn score ss
 
     score :: s -> v
     score s = getElement s scores
@@ -107,9 +113,15 @@ play = go
         case moves s of
           Left  v  -> v
 
-          -- this one line is the minmax algorithm
 
-          Right ss -> negate <| minimumOn id <| map score ss
+          Right ss -> 
+            let maxMinOn = 
+                  if maximizersTurn s
+                  then maximumOn 
+                  else minimumOn
+            -- this one line is the minmax algorithm
+            in maxMinOn id <| map score ss
+
 
 ------------------------------------------------------------------------------
 --  this algorithm is tractable for a 4x4 board

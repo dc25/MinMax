@@ -84,7 +84,7 @@ instance IIndex TTT where
   toIndex   :: Int -> TTT
   fromIndex :: TTT -> Int
 
-  toIndex   xos           = TTT O (playerMask .&. xos) (playerMask .&. shiftR xos playerBits)
+  toIndex   xos           = TTT (if (popCount xos `mod` 2) == 1 then O else X) (playerMask .&. xos) (playerMask .&. shiftR xos playerBits)
   fromIndex (TTT b xs os) = xs .|. shiftL os playerBits
 
 ------------------------------------------------------------------------------
@@ -92,8 +92,10 @@ instance IIndex TTT where
 ------------------------------------------------------------------------------
 
 instance Game TTT Value where
-  moves (TTT b xs os) | isWinning size xs = Left Win
-                      | isWinning size os = Left Lose
+  maximizersTurn (TTT b _ _) = b == X
+
+  moves (TTT b xs os) | isWinning size xs = Left (if b == X then Lose else Win)
+                      | isWinning size os = Left (if b == X then Win else Lose)
                       | True              = result <| mapMaybe move positions
     where
       -- the xo and os are swapped after making a move
