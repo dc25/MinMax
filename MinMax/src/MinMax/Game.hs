@@ -47,7 +47,7 @@ module MinMax.Game
 --
 ------------------------------------------------------------------------------
 
-import Prelude(IO, Show, Either(Left,Right), Ord, ($), (.), print, return, id, Bounded(maxBound))
+import Prelude(IO, Show, Either(Left,Right), Ord, ($), (.), print, return, id, Bounded(maxBound), Bool)
 import Data.Maybe
 import Data.List
 import Data.Vector (Vector, generate)
@@ -67,6 +67,7 @@ import MinMax.Data as MMDa
 
 class (Ord v, Negate v, IIndex s) => Game s v | s -> v where
   moves :: s -> Moves s v
+  maximizersTurn :: s -> Bool
 
 ------------------------------------------------------------------------------
 --  Moves
@@ -93,7 +94,12 @@ play = go
       print ""
       case (moves s) of
         Left v   -> return ()
-        Right ss -> go $ maximumOn score ss
+        Right ss -> 
+          let maxMinOn = 
+                if maximizersTurn s 
+                then maximumOn
+                else minimumOn
+          in go $ maxMinOn score ss
 
     score :: s -> v
     score s = scores Vector.! (MMDa.fromIndex s)
@@ -109,12 +115,18 @@ play = go
     scores :: Vector v
     scores = generate (MMDa.fromIndex (maxBound :: s))
       (\s ->
-        case moves (MMDa.toIndex s) of
-          Left  v  -> v
+        let gameState = MMDa.toIndex s
+        in case moves (gameState) of
+             Left  v  -> v
 
-          -- this one line is the minmax algorithm
+             Right ss -> 
+               let maxMinOn = 
+                     if maximizersTurn gameState
+                     then maximumOn 
+                     else minimumOn
 
-          Right ss -> negate $ minimumOn id $ (map score ss))
+               -- this one line is the minmax algorithm
+               in maxMinOn id $ (map score ss) )
 
 ------------------------------------------------------------------------------
 --  this algorithm is tractable for a 4x4 board
