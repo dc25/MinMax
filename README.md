@@ -1,6 +1,6 @@
 # MinMax
 
-This project implements a tic-tac-toe game using the min-max algorithm.   The code is based on this project by Mike Kerekes .  The implementations have diverged somewhat.
+This project implements a tic-tac-toe game using the [minmax algorithm][minmax].   The code is based on this project by Mike Kerekes .  The implementations have diverged somewhat.
 
 Both a command line and a browser based front ends.   
 
@@ -10,5 +10,6 @@ The browser based front end can be built using ghcjs and depends on miso.  See t
 
 You can try out the browser based verson here.
 
+[minmax][https://en.wikipedia.org/wiki/Minimax]
 
 
