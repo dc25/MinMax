@@ -10,6 +10,6 @@ The browser based front end can be built using ghcjs and depends on miso.  See t
 
 You can try out the browser based verson here.
 
-[minmax]: [https://en.wikipedia.org/wiki/Minimax]
+[minmax]: https://en.wikipedia.org/wiki/Minimax
 
 
