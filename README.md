@@ -1,2 +1,1 @@
-# Samples
-Code Samples
+# MinMax
